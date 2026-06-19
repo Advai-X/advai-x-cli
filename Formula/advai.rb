@@ -1,6 +1,12 @@
 # Homebrew 配方 — 使用方式：
-#   brew tap Advai-X/advai
+#
+#   # 方式一（推荐，标准 tap 流程）：
+#   brew tap Advai-X/advai https://github.com/Advai-X/advai-x-cli
 #   brew install advai
+#
+#   # 方式二（直接下载 .rb 本地安装）：
+#   curl -fsSL https://raw.githubusercontent.com/Advai-X/advai-x-cli/main/Formula/advai.rb > /tmp/advai.rb
+#   brew install --formula /tmp/advai.rb
 #
 # 新版本发布时，只需更新 url 与 sha256 两项即可。
 
