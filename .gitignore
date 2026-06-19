@@ -1,0 +1,27 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# --- Virtual env ---
+.venv/
+venv/
+ENV/
+
+# --- Node.js (for npm packaging only) ---
+node_modules/
+
+# --- macOS / IDE ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- Local data produced by the CLI ---
+.advai/
