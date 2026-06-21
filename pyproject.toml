@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "advai-cli"
-version = "1.0.2"
-description = "Cross-platform AI Skill manager"
+version = "1.0.3"
+description = "A cross-platform CLI tool."
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"

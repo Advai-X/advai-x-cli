@@ -7,13 +7,13 @@
 #
 # To ship a new release: bump the version and replace the sha256 below.
 # The sha256 can be computed with:
-#   curl -sL https://pypi.io/packages/source/a/advai-cli/advai-cli-1.0.2.tar.gz | shasum -a 256
+#   curl -sL https://pypi.io/packages/source/a/advai-cli/advai-cli-1.0.3.tar.gz | shasum -a 256
 
 class Advai < Formula
-  desc "Cross-platform AI Skill manager"
+  desc "A cross-platform CLI tool."
   homepage "https://pypi.org/project/advai-cli/"
-  url "https://pypi.io/packages/source/a/advai-cli/advai-cli-1.0.2.tar.gz"
-  sha256 "271168c629006e07469395df025b75620c46ce2185037b07598e20a33b3fbd00"
+  url "https://pypi.io/packages/source/a/advai-cli/advai-cli-1.0.3.tar.gz"
+  sha256 "4195790ade2b8406d305e3e53717fcf1a9c40424a932d2002cb436943671f72f"
   license "MIT"
 
   depends_on "python@3.11"

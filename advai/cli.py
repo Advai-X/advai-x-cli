@@ -17,7 +17,7 @@ def _ensure_dirs():
 @click.group()
 @click.version_option(version=__version__, prog_name="advai")
 def cli():
-    """advai — cross-platform AI Skill manager"""
+    """advai — a cross-platform CLI tool."""
     _ensure_dirs()
 
 
