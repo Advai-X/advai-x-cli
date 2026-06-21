@@ -1,6 +1,6 @@
 {
-  "name": "advai",
-  "version": "1.0.0",
+  "name": "advai-cli",
+  "version": "1.0.1",
   "description": "Cross-platform AI Skill manager — one-click install / uninstall / list / update",
   "bin": {
     "advai": "./bin/advai.js"

@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# advai — 一键安装脚本（Mac / Linux 通用）
-# 使用：
+# advai — one-click installer (macOS / Linux)
+# Usage:
 #     curl -fsSL https://raw.githubusercontent.com/Advai-X/advai-x-cli/main/install.sh | bash
-# 或：
+# Or:
 #     wget -qO- https://raw.githubusercontent.com/Advai-X/advai-x-cli/main/install.sh | bash
 #
-# 工作方式：
-#   1. 检查是否有 python3 / pip3；没有则给出安装提示后退出
-#   2. 用 pip3 install --user advai 安装核心（若环境不支持 --user，则退化为全局安装）
-#   3. 将 ~/.local/bin 加入 PATH（如不在其中）
+# How it works:
+#   1. Check python3 / pip3; if not found, print a friendly hint and exit
+#   2. Install the core via `pip3 install --user advai-cli` (fall back to
+#      system-wide install if --user is not available)
+#   3. Make sure ~/.local/bin is on PATH (append to shell rc if missing)
 # ---------------------------------------------------------------------------
 
 set -e
@@ -24,32 +25,32 @@ err()  { printf "\033[1;31m[advai][error]\033[0m %s\n" "$*" >&2; }
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# ---- 1. 检测 Python / pip ----
+# ---- 1. Detect Python / pip ----
 if ! command_exists "$PY"; then
-  err "未找到 python3，请先安装 Python 3：https://www.python.org/downloads/"
+  err "python3 not found. Please install Python 3: https://www.python.org/downloads/"
   exit 1
 fi
 if ! command_exists "$PIP"; then
-  err "未找到 pip3，尝试用系统包管理器安装（如 apt install python3-pip / brew install python）"
+  err "pip3 not found. Try installing it with your system package manager (e.g. apt install python3-pip or brew install python)."
   exit 1
 fi
 
-log "检测到 $(${PY} --version 2>&1 | head -n1)"
+log "Detected $(${PY} --version 2>&1 | head -n1)"
 
-# ---- 2. 安装 advai ----
-log "正在安装 advai ($ADVAI_VERSION) ..."
+# ---- 2. Install advai-cli ----
+log "Installing advai ($ADVAI_VERSION) ..."
 
-INSTALL_TARGET="advai"
+INSTALL_TARGET="advai-cli"
 if [ "$ADVAI_VERSION" != "latest" ]; then
-  INSTALL_TARGET="advai==${ADVAI_VERSION}"
+  INSTALL_TARGET="advai-cli==${ADVAI_VERSION}"
 fi
 
-# 优先 --user；若在虚拟环境中（VIRTUAL_ENV 非空），则不带 --user
+# Prefer --user; skip it if we are already inside a virtual environment
 if [ -n "${VIRTUAL_ENV:-}" ]; then
   "$PIP" install --upgrade "$INSTALL_TARGET"
 else
   if ! "$PIP" install --user --upgrade "$INSTALL_TARGET"; then
-    warn "user-site 安装失败，尝试全局安装（可能需要 sudo）"
+    warn "user-site installation failed, trying system-wide (may need sudo)..."
     if [ "$(id -u)" -eq 0 ]; then
       "$PIP" install --upgrade "$INSTALL_TARGET"
     else
@@ -58,7 +59,7 @@ else
   fi
 fi
 
-# ---- 3. 确保 ~/.local/bin 在 PATH ----
+# ---- 3. Ensure ~/.local/bin is on PATH ----
 LOCAL_BIN="$HOME/.local/bin"
 SHELL_NAME="$(basename "${SHELL:-/bin/sh}")"
 RC_FILE=""
@@ -72,17 +73,17 @@ esac
 case ":$PATH:" in
   *":$LOCAL_BIN:"*) : ;;
   *)
-    log "将 $LOCAL_BIN 加入 PATH（写入 $RC_FILE）"
+    log "Adding $LOCAL_BIN to PATH (written to $RC_FILE)"
     mkdir -p "$(dirname "$RC_FILE")"
     if [ "$SHELL_NAME" = "fish" ]; then
       echo "fish_add_path -g $LOCAL_BIN" >> "$RC_FILE"
     else
       echo "export PATH=\"$LOCAL_BIN:\$PATH\" # added by advai installer" >> "$RC_FILE"
     fi
-    warn "请重新打开终端，或执行：source $RC_FILE"
+    warn "Please restart your terminal, or run: source $RC_FILE"
     ;;
 esac
 
-log "安装完成！试试运行："
+log "Installation complete! Try:"
 log "  advai --help"
 log "  advai install <skill-name>"

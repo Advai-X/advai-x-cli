@@ -15,49 +15,49 @@ def _ensure_dirs():
 
 
 @click.group()
-@click.version_option(package_name="advai")
+@click.version_option(package_name="advai-cli")
 def cli():
-    """advai — 跨平台 AI Skill 管理器"""
+    """advai — cross-platform AI Skill manager"""
     _ensure_dirs()
 
 
 @cli.command()
 @click.argument("skill_name")
-@click.option("--force", is_flag=True, help="强制重新安装（覆盖已有版本）")
+@click.option("--force", is_flag=True, help="Force reinstall (overwrite existing)")
 def install(skill_name, force):
-    """安装一个 Skill: advai install <skill-name>"""
+    """Install a Skill: advai install <skill-name>"""
     try:
         install_skill(skill_name, force=force)
-        click.echo(f"✅ Skill '{skill_name}' 安装成功")
+        click.echo(f"✅ Skill '{skill_name}' installed successfully")
     except FileExistsError:
-        click.echo(f"⚠️  Skill '{skill_name}' 已经存在，使用 --force 可覆盖")
+        click.echo(f"⚠️  Skill '{skill_name}' already exists, use --force to overwrite")
     except Exception as e:
-        click.echo(f"❌ 安装失败: {e}", err=True)
+        click.echo(f"❌ Installation failed: {e}", err=True)
         sys.exit(1)
 
 
 @cli.command()
 @click.argument("skill_name")
 def uninstall(skill_name):
-    """卸载一个 Skill: advai uninstall <skill-name>"""
+    """Uninstall a Skill: advai uninstall <skill-name>"""
     try:
         uninstall_skill(skill_name)
-        click.echo(f"🗑️  Skill '{skill_name}' 已卸载")
+        click.echo(f"🗑️  Skill '{skill_name}' uninstalled")
     except FileNotFoundError:
-        click.echo(f"⚠️  Skill '{skill_name}' 未安装")
+        click.echo(f"⚠️  Skill '{skill_name}' is not installed")
     except Exception as e:
-        click.echo(f"❌ 卸载失败: {e}", err=True)
+        click.echo(f"❌ Uninstall failed: {e}", err=True)
         sys.exit(1)
 
 
 @cli.command(name="list")
 def list_cmd():
-    """列出本地已安装的 Skills"""
+    """List locally installed Skills"""
     skills = list_skills()
     if not skills:
-        click.echo("(暂无已安装的 Skill)")
+        click.echo("(no Skills installed)")
         return
-    click.echo("📋 已安装 Skills:")
+    click.echo("📋 Installed Skills:")
     for s in skills:
         click.echo(f"  • {s}")
 
@@ -65,26 +65,26 @@ def list_cmd():
 @cli.command()
 @click.argument("skill_name", required=False)
 def update(skill_name):
-    """更新一个（或全部）Skill: advai update [skill-name]"""
+    """Update one (or all) Skills: advai update [skill-name]"""
     try:
         updated = update_skill(skill_name)
         if updated:
             for s in updated:
-                click.echo(f"🔄 {s} 已更新")
+                click.echo(f"🔄 {s} updated")
         else:
-            click.echo("(没有可更新的 Skill)")
+            click.echo("(nothing to update)")
     except Exception as e:
-        click.echo(f"❌ 更新失败: {e}", err=True)
+        click.echo(f"❌ Update failed: {e}", err=True)
         sys.exit(1)
 
 
 @cli.command()
 @click.argument("skill_name")
 def info(skill_name):
-    """查看 Skill 详情: advai info <skill-name>"""
+    """Show Skill details: advai info <skill-name>"""
     data = info_skill(skill_name)
     if data is None:
-        click.echo(f"⚠️  Skill '{skill_name}' 未安装或无元数据")
+        click.echo(f"⚠️  Skill '{skill_name}' not installed or has no metadata")
         return
     click.echo(f"ℹ️  Skill '{skill_name}':")
     for k, v in data.items():

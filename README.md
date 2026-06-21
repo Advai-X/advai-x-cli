@@ -1,30 +1,31 @@
-# advai — 跨平台 AI Skill 管理器
+# advai-cli — Cross-platform AI Skill Manager
 
-一个用 Python 写的 CLI，让你可以像安装软件包一样安装/卸载 AI Skills。
+A Python CLI that lets you install / uninstall AI Skills like software packages.
 
-- **平台**：macOS / Linux / Windows
-- **安装方式**：`pip` / `npm` / `brew` / `curl | bash` 任选
-- **核心命令**：`install` / `uninstall` / `list` / `update` / `info`
+- **Platforms**: macOS / Linux / Windows
+- **Installation**: choose from `pip`, `npm`, `brew`, or `curl | bash`
+- **Commands**: `install`, `uninstall`, `list`, `update`, `info`
 
 ---
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 方式一：pip
-pip install advai
+# Option 1: pip (most reliable)
+pip install advai-cli
 
-# 方式二：npm
-npm install -g advai
+# Option 2: npm
+npm install -g advai-cli
 
-# 方式三：brew
-brew install https://raw.githubusercontent.com/Advai-X/advai-x-cli/main/Formula/advai.rb
+# Option 3: Homebrew (macOS)
+brew tap Advai-X/advai https://github.com/Advai-X/advai-x-cli
+brew install advai
 
-# 方式四：一键脚本
+# Option 4: one-liner script (macOS / Linux)
 curl -fsSL https://raw.githubusercontent.com/Advai-X/advai-x-cli/main/install.sh | bash
 ```
 
-安装完成后：
+After installation:
 
 ```bash
 advai --version
@@ -37,29 +38,29 @@ advai uninstall demo-skill
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
-advai/              # 核心 CLI（Python）
+advai/              # core CLI (Python)
   __init__.py
-  cli.py            # 命令行入口（基于 click）
-  skills.py         # Skill 安装 / 卸载 / 元数据逻辑
-Formula/advai.rb    # Homebrew 配方
-bin/advai.js        # npm 入口桥接脚本
-install.sh          # curl | bash 一键安装脚本
-pyproject.toml      # PyPI 打包配置
-package.json        # npm 打包配置
+  cli.py            # entry point (click-based)
+  skills.py         # Skill install / uninstall / metadata logic
+Formula/advai.rb    # Homebrew formula
+bin/advai.js        # npm entry point bridge
+install.sh          # curl | bash one-liner script
+pyproject.toml      # PyPI build configuration
+package.json        # npm package configuration
 ```
 
 ---
 
-## 本地开发
+## Local Development
 
 ```bash
-# 从源码运行
+# Run from source
 python3 -m advai.cli --help
 
-# 构建发布包
+# Build distribution packages
 python3 -m pip install --upgrade build twine
 python3 -m build
 python3 -m twine upload dist/*

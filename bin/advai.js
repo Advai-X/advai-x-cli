@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * advai — Node.js 入口包装器
- * npm install -g advai 后，`advai` 命令最终通过此脚本桥接到 Python 核心。
+ * advai — Node.js entry point.
+ * After `npm install -g advai-cli`, the `advai` command routes
+ * through this script to the Python core.
  *
- * 设计：
- *  1) 优先使用系统 python3 直接调用随包附带的 advai/cli.py；
- *  2) 若当前环境通过 pip 已安装同名 advai Python 包，则走 entry-point；
- *  3) 找不到 python3 时给出友好提示。
+ * Design:
+ *   1) Look for python3 on the system and run advai/cli.py bundled
+ *      inside this npm package.
+ *   2) Fall back to `python3 -m advai` if the bundled source is not found.
+ *   3) Print a friendly hint if python3 cannot be found.
  */
 const { spawn, spawnSync } = require("child_process");
 const path = require("path");
@@ -32,7 +34,7 @@ function findLocalCli() {
 const python = findPython();
 if (!python) {
   process.stderr.write(
-    "advai 需要 Python 3，请先安装 Python 3：https://www.python.org/downloads/\n"
+    "advai requires Python 3. Please install Python 3 from https://www.python.org/downloads/\n"
   );
   process.exit(2);
 }
@@ -42,15 +44,15 @@ const argv = process.argv.slice(2);
 
 let child;
 if (localCli) {
-  // 直接用当前 npm 包内的 Python 源码运行（无需额外 pip install）
+  // Run directly from the bundled Python source (no additional pip install needed)
   child = spawn(python, [localCli, ...argv], { stdio: "inherit" });
 } else {
-  // 回退：假设用户已通过 pip 安装了同名 advai 包，走 entry-point
+  // Fallback: assume the user already installed advai via pip, use the entry point
   child = spawn(python, ["-m", "advai", ...argv], { stdio: "inherit" });
 }
 
 child.on("exit", (code) => process.exit(code === null ? 1 : code));
 child.on("error", (err) => {
-  process.stderr.write("无法启动 advai: " + err.message + "\n");
+  process.stderr.write("Failed to start advai: " + err.message + "\n");
   process.exit(1);
 });
