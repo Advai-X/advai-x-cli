@@ -15,7 +15,7 @@ class Advai < Formula
   desc "Cross-platform AI Skill manager — one-click install / uninstall / list / update"
   homepage "https://github.com/Advai-X/advai-x-cli"
   url "https://github.com/Advai-X/advai-x-cli/archive/refs/tags/v1.0.1.tar.gz"
-  sha256 "REPLACE_WITH_SHA256_AFTER_TAGGED"
+  sha256 "22fcb0cd36f6d3d6ddbce28beb2942095710cc30e015113b287685cf466142b9"
   license "MIT"
 
   depends_on "python@3.11"
