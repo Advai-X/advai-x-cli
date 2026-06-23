@@ -1,6 +1,6 @@
 {
   "name": "advai-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A cross-platform CLI tool.",
   "bin": {
     "advai": "./bin/advai.js"

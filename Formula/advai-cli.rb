@@ -1,8 +1,8 @@
 class AdvaiCli < Formula
   desc "Cross-platform CLI tool for skill management"
   homepage "https://pypi.org/project/advai-cli/"
-  url "https://files.pythonhosted.org/packages/8c/f1/d365949065369246da5fa2f70aed3dd67f3b609506ffd58ac38a66453939/advai_cli-1.0.3.tar.gz"
-  sha256 "4195790ade2b8406d305e3e53717fcf1a9c40424a932d2002cb436943671f72f"
+  url "https://files.pythonhosted.org/packages/4d/b0/69f7d9356ad4692ba588ccbc4976e9c9757d81c1d680cc9b7ae4d93914db/advai_cli-1.0.4.tar.gz"
+  sha256 "81ac57e7eae6d964df174c55d89071309fd0b2fe551c2ed6e53197f3e65b977d"
   license "MIT"
 
   depends_on "python@3.11"
