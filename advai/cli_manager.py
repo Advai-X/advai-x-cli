@@ -89,6 +89,23 @@ def _opencli_registry() -> list:
         raise RuntimeError("Failed to parse opencli registry output") from exc
 
 
+@lru_cache(maxsize=1)
+def _opencli_external_registry() -> list:
+    if not opencli_available():
+        return []
+    result = subprocess.run(
+        ["opencli", "external", "list", "-f", "json"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or "Failed to query opencli external registry")
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Failed to parse opencli external registry output") from exc
+
+
 def list_available_clis(search: str = "") -> list:
     term = str(search or "").strip().lower()
     grouped = {}
@@ -116,6 +133,39 @@ def list_available_clis(search: str = "") -> list:
     return [grouped[name] for name in sorted(grouped)]
 
 
+def get_available_cli_info(cli_name: str) -> dict | None:
+    target = str(cli_name or "").strip()
+    if not target:
+        return None
+    for item in list_available_clis():
+        if item["name"] == target:
+            return item
+    return None
+
+
+def list_external_clis(search: str = "") -> list:
+    term = str(search or "").strip().lower()
+    items = []
+    for item in _opencli_external_registry():
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        if term and term not in name.lower():
+            continue
+        items.append(item)
+    return items
+
+
+def get_external_cli_info(cli_name: str) -> dict | None:
+    target = str(cli_name or "").strip()
+    if not target:
+        return None
+    for item in _opencli_external_registry():
+        if str(item.get("name") or "").strip() == target:
+            return item
+    return None
+
+
 def cli_exists(cli_name: str) -> bool:
     target = str(cli_name or "").strip()
     if not target:
@@ -131,6 +181,10 @@ def build_cli_exec_command(cli_name: str, args: list | None = None) -> list:
     if args:
         command.extend(args)
     return command
+
+
+def build_external_cli_install_command(cli_name: str) -> list:
+    return ["opencli", "external", "install", cli_name]
 
 
 def run_passthrough_command(command: list) -> int:

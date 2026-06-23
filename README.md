@@ -10,11 +10,13 @@ pip install advai-cli
 Commands:
 ```bash
 advai --help
+advai info
+advai update
 advai skill list
 advai skill install demo-skill
 advai cli list
-advai cli info
-advai cli update --yes
+advai cli info demo-cli
+advai cli install demo-cli --yes
 ```
 
 Structured command groups:
@@ -26,11 +28,15 @@ advai skill update demo-skill
 advai skill uninstall demo-skill
 ```
 
-CLI management:
+advai self-management:
+```bash
+advai info
+advai update
+```
+
+External CLI management:
 ```bash
 advai cli list
-advai cli info
-advai cli install --manager pip --yes
-advai cli update --manager pip --yes
-advai cli uninstall --manager pip --yes
+advai cli info demo-cli
+advai cli install demo-cli --yes
 ```

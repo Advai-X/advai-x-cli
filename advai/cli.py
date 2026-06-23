@@ -5,14 +5,13 @@ import sys
 from advai import __version__
 from advai.cli_manager import (
     cli_info,
-    list_available_clis,
+    get_available_cli_info,
+    list_external_clis,
+    get_external_cli_info,
     cli_exists,
     build_cli_exec_command,
+    build_external_cli_install_command,
     opencli_available,
-    ensure_manager_available,
-    resolve_manager,
-    build_install_command,
-    build_uninstall_command,
     build_update_command,
     run_manager_command,
     run_passthrough_command,
@@ -118,6 +117,34 @@ def _skill_info(skill_name):
         click.echo(f"  {k}: {v}")
 
 
+def _self_info():
+    data = cli_info()
+    click.echo("advai:")
+    click.echo(f"  name: {data['name']}")
+    click.echo(f"  version: {data['version']}")
+    click.echo(f"  install_method: {data['install_method']}")
+    click.echo(f"  python: {data['python']}")
+    click.echo(f"  entry: {data['entry']}")
+    click.echo(f"  module: {data['module']}")
+    click.echo(f"  skills_dir: {data['skills_dir']}")
+    click.echo("  available_managers:")
+    for manager, available in data["available_managers"].items():
+        click.echo(f"    {manager}: {'yes' if available else 'no'}")
+
+
+@cli.command(name="info")
+def self_info_cmd():
+    """Show advai details."""
+    _self_info()
+
+
+@cli.command(name="update")
+def self_update_cmd():
+    """Update advai itself."""
+    command = build_update_command("pip")
+    click.echo(f"Recommended update command: {' '.join(command)}")
+
+
 @cli.group(name="skill")
 def skill_admin():
     """Manage Skills with a structured command group."""
@@ -160,44 +187,47 @@ def skill_info_cmd(skill_name):
 
 @cli.group(name="cli", cls=ExternalCLIGroup)
 def cli_admin():
-    """Manage advai itself or execute external CLIs."""
+    """Manage or execute external CLIs."""
 
 
 @cli_admin.command(name="info")
-def cli_info_cmd():
-    """Show advai CLI details."""
-    data = cli_info()
-    click.echo("advai CLI:")
-    click.echo(f"  name: {data['name']}")
-    click.echo(f"  version: {data['version']}")
-    click.echo(f"  install_method: {data['install_method']}")
-    click.echo(f"  python: {data['python']}")
-    click.echo(f"  entry: {data['entry']}")
-    click.echo(f"  module: {data['module']}")
-    click.echo(f"  skills_dir: {data['skills_dir']}")
-    click.echo("  available_managers:")
-    for manager, available in data["available_managers"].items():
-        click.echo(f"    {manager}: {'yes' if available else 'no'}")
+@click.argument("cli_name")
+def cli_info_cmd(cli_name):
+    """Show external CLI details."""
+    external = get_external_cli_info(cli_name)
+    if external is not None:
+        click.echo(f"CLI '{cli_name}':")
+        for key in ("name", "package", "binary", "installed", "description", "homepage", "tags"):
+            click.echo(f"  {key}: {external.get(key)}")
+        return
+    available = get_available_cli_info(cli_name)
+    if available is not None:
+        click.echo(f"CLI '{cli_name}':")
+        click.echo("  source: opencli")
+        click.echo(f"  command_count: {available['command_count']}")
+        click.echo(f"  commands: {', '.join(available['commands'])}")
+        if available.get("description"):
+            click.echo(f"  description: {available['description']}")
+        return
+    raise click.ClickException(f"CLI '{cli_name}' was not found")
 
 
 @cli_admin.command(name="list")
 @click.option("--search", default="", help="Filter CLI names")
 def cli_list_cmd(search):
-    """List executable external CLIs."""
+    """List installable external CLIs."""
     if not opencli_available():
         raise click.ClickException("opencli is not installed or not on PATH")
-    targets = list_available_clis(search)
+    targets = list_external_clis(search)
     if not targets:
         click.echo("(no external CLIs found)")
         return
-    click.echo("Executable CLIs:")
+    click.echo("External CLIs:")
     for item in targets:
-        preview = ", ".join(item["commands"][:5])
-        if item["command_count"] > 5:
-            preview += ", ..."
-        click.echo(f"  • {item['name']} ({item['command_count']} commands)")
-        if preview:
-            click.echo(f"    commands: {preview}")
+        installed = "installed" if item.get("installed") else "not installed"
+        click.echo(f"  • {item['name']} ({installed})")
+        if item.get("description"):
+            click.echo(f"    description: {item['description']}")
 
 
 def _execute_cli_command(command, action):
@@ -213,46 +243,17 @@ def _execute_cli_command(command, action):
 
 
 @cli_admin.command(name="install")
-@click.option("--manager", type=click.Choice(["pip", "npm", "brew"]), help="Package manager to use")
-@click.option("--reinstall", is_flag=True, help="Force reinstall where supported")
+@click.argument("cli_name")
 @click.option("--yes", is_flag=True, help="Skip confirmation prompt")
-def cli_install_cmd(manager, reinstall, yes):
-    """Install or reinstall the advai CLI."""
-    manager = resolve_manager(manager)
-    ensure_manager_available(manager)
-    command = build_install_command(manager, reinstall=reinstall)
+def cli_install_cmd(cli_name, yes):
+    """Install an external CLI."""
+    if not opencli_available():
+        raise click.ClickException("opencli is not installed or not on PATH")
+    command = build_external_cli_install_command(cli_name)
     if not yes:
-        click.confirm(f"Run install via {manager}: {' '.join(command)} ?", abort=True)
+        click.confirm(f"Install external CLI '{cli_name}' via: {' '.join(command)} ?", abort=True)
     _execute_cli_command(command, "install")
-    click.echo(f"CLI install completed via {manager}")
-
-
-@cli_admin.command(name="update")
-@click.option("--manager", type=click.Choice(["pip", "npm", "brew"]), help="Package manager to use")
-@click.option("--yes", is_flag=True, help="Skip confirmation prompt")
-def cli_update_cmd(manager, yes):
-    """Update the advai CLI."""
-    manager = resolve_manager(manager)
-    ensure_manager_available(manager)
-    command = build_update_command(manager)
-    if not yes:
-        click.confirm(f"Run update via {manager}: {' '.join(command)} ?", abort=True)
-    _execute_cli_command(command, "update")
-    click.echo(f"CLI update completed via {manager}")
-
-
-@cli_admin.command(name="uninstall")
-@click.option("--manager", type=click.Choice(["pip", "npm", "brew"]), help="Package manager to use")
-@click.option("--yes", is_flag=True, help="Skip confirmation prompt")
-def cli_uninstall_cmd(manager, yes):
-    """Uninstall the advai CLI."""
-    manager = resolve_manager(manager)
-    ensure_manager_available(manager)
-    command = build_uninstall_command(manager)
-    if not yes:
-        click.confirm(f"Run uninstall via {manager}: {' '.join(command)} ?", abort=True)
-    _execute_cli_command(command, "uninstall")
-    click.echo(f"CLI uninstall completed via {manager}")
+    click.echo(f"CLI '{cli_name}' install completed")
 
 
 if __name__ == "__main__":
