@@ -11,6 +11,7 @@
   "files": [
     "advai/__init__.py",
     "advai/cli.py",
+    "advai/cli_manager.py",
     "advai/skills.py",
     "bin/advai.js",
     "bin/check-python.js",
