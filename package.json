@@ -18,9 +18,11 @@
   },
   "files": [
     "advai/__init__.py",
+    "advai/ai_client.py",
     "advai/cli.py",
     "advai/cli_manager.py",
     "advai/skills.py",
+    "advai/tui.py",
     "bin/advai.js",
     "bin/check-python.js",
     "LICENSE",

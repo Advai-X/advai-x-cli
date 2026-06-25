@@ -3,6 +3,7 @@ import os
 import sys
 
 from advai import __version__
+from advai.ai_client import AIClientError, load_ai_config
 from advai.cli_manager import (
     cli_info,
     get_available_cli_info,
@@ -17,6 +18,7 @@ from advai.cli_manager import (
     run_passthrough_command,
 )
 from advai.skills import install_skill, uninstall_skill, list_skills, update_skill, info_skill
+from advai.tui import run_tui
 
 SKILLS_DIR = os.path.expanduser("~/.advai/skills")
 CONFIG_DIR = os.path.expanduser("~/.advai")
@@ -30,7 +32,7 @@ def _ensure_dirs():
 @click.group()
 @click.version_option(version=__version__, prog_name="advai")
 def cli():
-    """Manage AdvAI skills and external CLIs."""
+    """Manage skills and external CLIs."""
     _ensure_dirs()
 
 
@@ -145,9 +147,29 @@ def self_update_cmd():
     click.echo(f"Recommended update command: {' '.join(command)}")
 
 
+@cli.command(name="tui")
+@click.option("--model", default=None, help="Override the AI model name")
+@click.option("--base-url", default=None, help="Override the OpenAI-compatible API base URL")
+@click.option("--system-prompt", default=None, help="Set the initial system prompt")
+@click.option("--timeout", default=None, type=int, help="Request timeout in seconds")
+@click.option("--no-clear", is_flag=True, help="Do not clear the terminal between turns")
+def tui_cmd(model, base_url, system_prompt, timeout, no_clear):
+    """Start a terminal chat UI backed by an OpenAI-compatible API."""
+    try:
+        config = load_ai_config(
+            model=model,
+            base_url=base_url,
+            system_prompt=system_prompt,
+            timeout=timeout,
+        )
+        run_tui(config, clear_screen=not no_clear)
+    except AIClientError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
 @cli.group(name="skill")
 def skill_admin():
-    """Manage AdvAI skills."""
+    """Manage skills."""
 
 
 @skill_admin.command(name="install")

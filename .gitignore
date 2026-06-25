@@ -25,3 +25,10 @@ node_modules/
 
 # --- Local data produced by the CLI ---
 .advai/
+
+# --- Local submission notes ---
+HOMEBREW_CORE.md
+HOMEBREW_CORE_PR.md
+
+# --- Local test directory ---
+tests/
