@@ -15,11 +15,22 @@ from advai import __version__
 from advai.ai_client import (
     AIClientError,
     AIConfig,
+    list_selectable_agents,
     list_selectable_models,
     request_chat_completion,
 )
 
-HELP_TEXT = "Commands: /help /clear /model [name] /system <prompt> /save <path> /exit"
+HELP_TEXT = "Type /help to view available commands."
+HELP_STATUS_TOKEN = "__HELP__"
+HELP_COMMAND_ITEMS = (
+    ("/help", "Show available commands"),
+    ("/clear", "Clear the current conversation"),
+    ("/agent [name]", "Switch the active agent"),
+    ("/model [name]", "Switch the active model"),
+    ("/system <prompt>", "Update the system prompt"),
+    ("/save <path>", "Save the current transcript"),
+    ("/exit", "Exit the TUI session"),
+)
 WELCOME_BANNER_ADVAI = (
     " █████╗ ██████╗ ██╗   ██╗ █████╗ ██╗      ██████╗██╗     ██╗",
     "██╔══██╗██╔══██╗██║   ██║██╔══██╗██║     ██╔════╝██║     ██║",
@@ -95,18 +106,75 @@ def _render_welcome_banner() -> None:
     click.echo()
 
 
+def _render_help_panel() -> None:
+    click.secho("commands", fg="bright_black", bold=True)
+    for command_name, description in HELP_COMMAND_ITEMS:
+        click.secho(f"  {command_name:<18}", fg="cyan", nl=False)
+        click.echo(description)
+
+
+def _render_status(status: str) -> None:
+    if status == HELP_STATUS_TOKEN:
+        click.secho("status", fg="bright_black", nl=False)
+        click.echo(": Available commands")
+        _render_help_panel()
+        return
+
+    lines = str(status or "").splitlines() or [""]
+    click.secho("status", fg="bright_black", nl=False)
+    click.echo(f": {lines[0]}")
+    for line in lines[1:]:
+        click.echo(f"        {line}")
+
+
 def _classify_picker_sequence(sequence: bytes) -> str:
     if sequence == b"\x03":
         return "interrupt"
+    if sequence == b"\x04":
+        return "eof"
     if sequence in {b"\r", b"\n"}:
         return "enter"
-    if sequence == b"\x1b[A":
+    if sequence in {b"\x1b[A", b"\x1bOA"}:
         return "up"
-    if sequence == b"\x1b[B":
+    if sequence in {b"\x1b[B", b"\x1bOB"}:
         return "down"
+    if sequence in {b"\x1b[C", b"\x1bOC"}:
+        return "right"
+    if sequence in {b"\x1b[D", b"\x1bOD"}:
+        return "left"
+    if sequence in {b"\x7f", b"\b"}:
+        return "backspace"
     if sequence.startswith(b"\x1b"):
         return "escape"
     return sequence.decode("utf-8", errors="ignore")
+
+
+def _read_keypress(fd: int) -> str:
+    sequence = os.read(fd, 1)
+    key = _classify_picker_sequence(sequence)
+    if key in {
+        "interrupt",
+        "eof",
+        "enter",
+        "up",
+        "down",
+        "left",
+        "right",
+        "backspace",
+    }:
+        return key
+    if key != "escape":
+        return key
+
+    while len(sequence) < 6:
+        ready, _, _ = select.select([fd], [], [], 0.15)
+        if not ready:
+            break
+        sequence += os.read(fd, 1)
+        key = _classify_picker_sequence(sequence)
+        if key in {"up", "down", "left", "right"}:
+            return key
+    return key
 
 
 def _read_picker_key() -> str:
@@ -114,23 +182,7 @@ def _read_picker_key() -> str:
     previous = termios.tcgetattr(fd)
     try:
         tty.setraw(fd)
-        sequence = os.read(fd, 1)
-        key = _classify_picker_sequence(sequence)
-        if key == "interrupt":
-            raise KeyboardInterrupt
-        if key != "escape":
-            return key
-
-        while len(sequence) < 3:
-            ready, _, _ = select.select([fd], [], [], 0.15)
-            if not ready:
-                break
-            sequence += os.read(fd, 1)
-            key = _classify_picker_sequence(sequence)
-            if key in {"up", "down"}:
-                return key
-
-        key = _classify_picker_sequence(sequence)
+        key = _read_keypress(fd)
         if key == "interrupt":
             raise KeyboardInterrupt
         return key
@@ -138,43 +190,98 @@ def _read_picker_key() -> str:
         termios.tcsetattr(fd, termios.TCSADRAIN, previous)
 
 
-def _render_model_picker(models: list[str], selected_index: int, current_model: str) -> None:
+def _read_user_input(prompt: str = "you> ") -> str:
+    fd = sys.stdin.fileno()
+    previous = termios.tcgetattr(fd)
+    buffer: list[str] = []
+
+    click.echo(prompt, nl=False)
+    try:
+        tty.setraw(fd)
+        while True:
+            key = _read_keypress(fd)
+            if key == "interrupt":
+                raise KeyboardInterrupt
+            if key == "eof" and not buffer:
+                raise EOFError
+            if key == "enter":
+                click.echo()
+                return "".join(buffer).strip()
+            if key == "backspace":
+                if buffer:
+                    buffer.pop()
+                    sys.stdout.write("\b \b")
+                    sys.stdout.flush()
+                continue
+            if key in {"up", "down", "left", "right", "escape"}:
+                continue
+            if not key:
+                continue
+
+            buffer.append(key)
+            sys.stdout.write(key)
+            sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, previous)
+
+
+def _render_option_picker(
+    title: str,
+    options: list[str],
+    selected_index: int,
+    current_value: str,
+) -> None:
     click.clear()
     click.echo()
-    click.secho("Select a model", bold=True)
+    click.secho(title, bold=True)
     click.echo("Use ↑/↓ to move, Enter to confirm, Esc to cancel.")
     click.echo()
-    for index, model_name in enumerate(models):
+    for index, option_name in enumerate(options):
         pointer = ">" if index == selected_index else " "
-        suffix = " (current)" if model_name == current_model else ""
+        suffix = " (current)" if option_name == current_value else ""
         if index == selected_index:
-            click.secho(f"{pointer} {model_name}{suffix}", fg="green", bold=True)
+            click.secho(f"{pointer} {option_name}{suffix}", fg="green", bold=True)
         else:
-            click.echo(f"{pointer} {model_name}{suffix}")
+            click.echo(f"{pointer} {option_name}{suffix}")
     click.echo()
 
 
-def _select_model(current_model: str) -> str | None:
-    models = list_selectable_models(current_model)
-    selected_index = models.index(current_model) if current_model in models else 0
+def _select_from_options(title: str, options: list[str], current_value: str) -> str | None:
+    selected_index = options.index(current_value) if current_value in options else 0
 
     while True:
-        _render_model_picker(models, selected_index, current_model)
+        _render_option_picker(title, options, selected_index, current_value)
         try:
             key = _read_picker_key()
         except KeyboardInterrupt:
             return None
 
         if key == "up":
-            selected_index = (selected_index - 1) % len(models)
+            selected_index = (selected_index - 1) % len(options)
             continue
         if key == "down":
-            selected_index = (selected_index + 1) % len(models)
+            selected_index = (selected_index + 1) % len(options)
             continue
         if key == "enter":
-            return models[selected_index]
+            return options[selected_index]
         if key == "escape":
             return None
+
+
+def _select_agent(current_agent: str) -> str | None:
+    return _select_from_options(
+        "Select an agent",
+        list_selectable_agents(current_agent),
+        current_agent,
+    )
+
+
+def _select_model(current_model: str) -> str | None:
+    return _select_from_options(
+        "Select a model",
+        list_selectable_models(current_model),
+        current_model,
+    )
 
 
 def _render_screen(config: AIConfig, history: list[dict], status: str, clear_screen: bool) -> None:
@@ -188,14 +295,14 @@ def _render_screen(config: AIConfig, history: list[dict], status: str, clear_scr
 
     if not history:
         _render_welcome_banner()
-    click.echo(f"advai tui | model={config.model}")
+    click.echo(f"advai tui | agent={config.agent} | model={config.model}")
     click.echo(f"backend={base_url}")
     click.echo(HELP_TEXT)
     click.echo("-" * min(size.columns, 80))
     for line in transcript:
         click.echo(line)
     click.echo("-" * min(size.columns, 80))
-    click.echo(f"status: {status}")
+    _render_status(status)
 
 
 def _save_transcript(history: list[dict], path: str, config: AIConfig) -> str:
@@ -237,10 +344,19 @@ def _handle_command(raw_value: str, history: list[dict], config: AIConfig) -> tu
     if command in {"exit", "quit"}:
         return False, "Session ended."
     if command == "help":
-        return True, HELP_TEXT
+        return True, HELP_STATUS_TOKEN
     if command == "clear":
         history.clear()
         return True, "Conversation cleared."
+    if command == "agent":
+        if not argument:
+            selected_agent = _select_agent(config.agent)
+            if not selected_agent:
+                return True, f"Agent selection cancelled. Current agent: {config.agent}"
+            config.agent = selected_agent
+            return True, f"Agent switched to {config.agent}"
+        config.agent = argument
+        return True, f"Agent switched to {config.agent}"
     if command == "model":
         if not argument:
             selected_model = _select_model(config.model)
@@ -275,7 +391,7 @@ def run_tui(config: AIConfig, clear_screen: bool = True) -> None:
         _render_screen(config, history, status, clear_screen=clear_screen)
 
         try:
-            user_input = input("you> ").strip()
+            user_input = _read_user_input("you> ")
         except EOFError:
             click.echo()
             return

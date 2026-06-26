@@ -7,7 +7,9 @@ import urllib.request
 from dataclasses import dataclass
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
+DEFAULT_AGENT = "default"
 DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_TUI_AGENTS = ("default",)
 DEFAULT_TUI_MODELS = (
     "gpt-4o-mini",
     "gpt-4o",
@@ -26,6 +28,7 @@ class AIClientError(RuntimeError):
 @dataclass
 class AIConfig:
     api_key: str
+    agent: str
     model: str
     base_url: str
     system_prompt: str
@@ -61,6 +64,7 @@ def _parse_timeout(value: str | None) -> int:
 
 
 def load_ai_config(
+    agent: str | None = None,
     model: str | None = None,
     base_url: str | None = None,
     system_prompt: str | None = None,
@@ -70,6 +74,7 @@ def load_ai_config(
     if not api_key:
         raise AIClientError("Set ADVAI_API_KEY or OPENAI_API_KEY before starting `advai tui`.")
 
+    resolved_agent = agent or os.getenv("ADVAI_AGENT") or DEFAULT_AGENT
     resolved_model = (
         model
         or os.getenv("ADVAI_MODEL")
@@ -87,11 +92,21 @@ def load_ai_config(
 
     return AIConfig(
         api_key=api_key,
+        agent=resolved_agent,
         model=resolved_model,
         base_url=resolved_base_url,
         system_prompt=resolved_system_prompt,
         timeout=resolved_timeout,
     )
+
+
+def list_selectable_agents(current_agent: str | None = None) -> list[str]:
+    raw_agents = os.getenv("ADVAI_AGENTS", "")
+    configured_agents = [item.strip() for item in raw_agents.split(",") if item.strip()]
+    base_agents = configured_agents or list(DEFAULT_TUI_AGENTS)
+    if current_agent:
+        return _dedupe_preserve_order([current_agent, *base_agents])
+    return _dedupe_preserve_order(base_agents)
 
 
 def list_selectable_models(current_model: str | None = None) -> list[str]:
@@ -135,6 +150,8 @@ def request_chat_completion(config: AIConfig, history: list[dict]) -> str:
         "model": config.model,
         "messages": _build_messages(history, config.system_prompt),
     }
+    if config.agent != DEFAULT_AGENT:
+        payload["agent"] = config.agent
     request = urllib.request.Request(
         config.chat_completions_url,
         data=json.dumps(payload).encode("utf-8"),

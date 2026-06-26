@@ -148,15 +148,17 @@ def self_update_cmd():
 
 
 @cli.command(name="tui")
+@click.option("--agent", default=None, help="Override the AI agent name")
 @click.option("--model", default=None, help="Override the AI model name")
 @click.option("--base-url", default=None, help="Override the OpenAI-compatible API base URL")
 @click.option("--system-prompt", default=None, help="Set the initial system prompt")
 @click.option("--timeout", default=None, type=int, help="Request timeout in seconds")
 @click.option("--no-clear", is_flag=True, help="Do not clear the terminal between turns")
-def tui_cmd(model, base_url, system_prompt, timeout, no_clear):
+def tui_cmd(agent, model, base_url, system_prompt, timeout, no_clear):
     """Start a terminal chat UI backed by an OpenAI-compatible API."""
     try:
         config = load_ai_config(
+            agent=agent,
             model=model,
             base_url=base_url,
             system_prompt=system_prompt,

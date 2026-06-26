@@ -170,6 +170,7 @@ The TUI connects to any OpenAI-compatible `/chat/completions` backend and runs e
 
 ```bash
 advai tui
+advai tui --agent default
 advai tui --model gpt-4o-mini
 advai tui --base-url https://api.openai.com/v1
 advai tui --system-prompt "You are a concise terminal coding assistant."
@@ -184,6 +185,8 @@ advai tui --timeout 180
 | --- | --- | --- | --- |
 | `ADVAI_API_KEY` | Yes* | none | API key for the AI backend |
 | `ADVAI_BASE_URL` | No | `https://api.openai.com/v1` | Base URL for an OpenAI-compatible API |
+| `ADVAI_AGENT` | No | `default` | Default agent used by `advai tui` |
+| `ADVAI_AGENTS` | No | `default` | Comma-separated agents shown by the interactive `/agent` picker |
 | `ADVAI_MODEL` | No | `gpt-4o-mini` | Default model used by `advai tui` |
 | `ADVAI_MODELS` | No | built-in model list | Comma-separated models shown by the interactive `/model` picker |
 | `ADVAI_SYSTEM_PROMPT` | No | built-in prompt | Initial system prompt |
@@ -199,6 +202,8 @@ advai tui --timeout 180
 ```bash
 /help
 /clear
+/agent
+/agent default
 /model
 /model gpt-4o-mini
 /system You are a helpful assistant.
@@ -206,6 +211,7 @@ advai tui --timeout 180
 /exit
 ```
 
+Run `/agent` with no arguments to open an interactive agent picker.
 Run `/model` with no arguments to open an interactive model picker. Use the up and down arrow keys to choose a model, then press Enter to confirm.
 
 ## Skills
