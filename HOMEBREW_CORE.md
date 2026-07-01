@@ -22,14 +22,12 @@ This repository is prepared to submit `advai-cli` to `homebrew-core`, but accept
 
 ## Local Validation Commands
 
-Run these in a normal local shell before opening a PR:
+Run these in a normal local shell before opening a PR. `brew audit` should be run from a `homebrew-core` checkout after copying the formula into `Formula/a/advai-cli.rb`, because Homebrew no longer supports auditing a local path directly:
 
 ```bash
 brew update
 brew tap --force homebrew/core
-export HOMEBREW_NO_INSTALL_FROM_API=1
 brew style Formula/advai-cli.rb
-brew audit --new --strict --online ./Formula/advai-cli.rb
 brew install --build-from-source ./Formula/advai-cli.rb
 brew test advai-cli
 ```
@@ -44,9 +42,9 @@ cd homebrew-core
 git checkout -b advai-cli
 cp /path/to/advai-x-cli/Formula/advai-cli.rb Formula/a/advai-cli.rb
 brew style Formula/a/advai-cli.rb
-brew audit --new --strict --online Formula/a/advai-cli.rb
+brew audit --strict --online advai-cli
 git add Formula/a/advai-cli.rb
-git commit -m "advai-cli 1.0.4 (new formula)"
+git commit -m "advai-cli 1.0.6 (new formula)"
 ```
 
 ## PR Notes
@@ -63,5 +61,5 @@ git commit -m "advai-cli 1.0.4 (new formula)"
 The fallback path remains a maintained tap install:
 
 ```bash
-brew install Advai-X/advai-x-cli/advai-cli
+brew install Advai-X/advai-cli/advai-cli
 ```

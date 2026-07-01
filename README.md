@@ -9,13 +9,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Advai-X/advai-x-cli/actions/workflows/ci.yml"><img src="https://github.com/Advai-X/advai-x-cli/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/Advai-X/advai-cli/actions/workflows/ci.yml"><img src="https://github.com/Advai-X/advai-cli/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://pypi.org/project/advai-cli/"><img src="https://img.shields.io/pypi/v/advai-cli" alt="PyPI Version" /></a>
   <a href="https://www.npmjs.com/package/advai-cli"><img src="https://img.shields.io/npm/v/advai-cli" alt="npm Version" /></a>
   <a href="https://pypi.org/project/advai-cli/"><img src="https://img.shields.io/pypi/pyversions/advai-cli" alt="Python Versions" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/pypi/l/advai-cli" alt="License" /></a>
-  <a href="https://github.com/Advai-X/advai-x-cli/stargazers"><img src="https://img.shields.io/github/stars/Advai-X/advai-x-cli?style=flat" alt="GitHub stars" /></a>
-  <a href="https://github.com/Advai-X/advai-x-cli/issues"><img src="https://img.shields.io/github/issues/Advai-X/advai-x-cli" alt="GitHub issues" /></a>
+  <a href="https://github.com/Advai-X/advai-cli/stargazers"><img src="https://img.shields.io/github/stars/Advai-X/advai-cli?style=flat" alt="GitHub stars" /></a>
+  <a href="https://github.com/Advai-X/advai-cli/issues"><img src="https://img.shields.io/github/issues/Advai-X/advai-cli" alt="GitHub issues" /></a>
 </p>
 
 <p align="center">
@@ -101,7 +101,7 @@ npm install -g advai-cli
 ### Install from Homebrew
 
 ```bash
-brew install Advai-X/advai-x-cli/advai-cli
+brew install Advai-X/advai-cli/advai-cli
 ```
 
 ### Install with the bootstrap script

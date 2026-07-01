@@ -2,13 +2,13 @@
   "name": "advai-cli",
   "version": "1.0.6",
   "description": "CLI for managing skills and external CLIs.",
-  "homepage": "https://github.com/Advai-X/advai-x-cli",
+  "homepage": "https://github.com/Advai-X/advai-cli",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Advai-X/advai-x-cli.git"
+    "url": "git+https://github.com/Advai-X/advai-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/Advai-X/advai-x-cli/issues"
+    "url": "https://github.com/Advai-X/advai-cli/issues"
   },
   "bin": {
     "advai": "./bin/advai.js"
