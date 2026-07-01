@@ -14,18 +14,19 @@
     "advai": "./bin/advai.js"
   },
   "scripts": {
-    "postinstall": "node ./bin/check-python.js"
+    "postinstall": "node ./bin/install-python.js"
   },
   "files": [
     "advai/__init__.py",
     "advai/ai_client.py",
     "advai/cli.py",
     "advai/cli_manager.py",
+    "advai/kb.py",
     "advai/skill_platforms.py",
     "advai/skills.py",
     "advai/tui.py",
     "bin/advai.js",
-    "bin/check-python.js",
+    "bin/install-python.js",
     "LICENSE",
     "README.md"
   ],

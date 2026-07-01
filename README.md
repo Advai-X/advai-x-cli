@@ -98,10 +98,14 @@ pip install advai-cli
 npm install -g advai-cli
 ```
 
+The npm package creates a private Python virtual environment during `postinstall`
+and installs the matching `advai-cli` version from PyPI into that environment.
+
 ### Install from Homebrew
 
 ```bash
-brew install Advai-X/advai-cli/advai-cli
+brew tap Advai-X/tap
+brew install advai-cli
 ```
 
 ### Install with the bootstrap script
@@ -390,11 +394,12 @@ advai/
   skills.py         Local skill metadata management
   tui.py            Terminal chat UI
 bin/
-  advai.js          npm bridge that forwards execution to Python
-  check-python.js   npm postinstall Python check
+  advai.js          npm bridge that launches the private Python environment
+  install-python.js npm postinstall script that creates the private virtualenv
 docs/
   assets/
     hero.png        README hero image
+  RELEASE_CHECKLIST.md Release steps for PyPI, npm, and Homebrew tap
 Formula/
   advai-cli.rb      Homebrew formula
 install.sh          Bootstrap installer
@@ -415,7 +420,7 @@ python -m advai.cli info
 ### Packaging model
 
 - PyPI ships the Python implementation directly
-- npm publishes a thin wrapper that locates Python and forwards to the Python CLI
+- npm creates a private virtual environment and installs the matching PyPI release into it
 - Homebrew installs the Python package through a formula-managed virtual environment
 
 ## Operational Notes
@@ -424,7 +429,7 @@ python -m advai.cli info
 - Knowledge bases are stored under `~/.advai/kbs`
 - Skills are stored under `~/.advai/skills`
 - The recommended self-update command changes depending on whether the tool was installed via `pip`, `npm`, or `brew`
-- npm installation checks for a working Python interpreter during `postinstall`
+- npm installation requires Python `3.8+` and prepares a private environment during `postinstall`
 
 ## License
 

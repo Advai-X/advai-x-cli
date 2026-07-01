@@ -1,11 +1,5 @@
-__pycache__/
-*.pyc
-.pytest_cache/
+**/__pycache__/
+**/*.pyc
+python-env/
 .venv/
-venv/
-node_modules/
-.DS_Store
-.git/
 dist/
-build/
-*.egg-info/
